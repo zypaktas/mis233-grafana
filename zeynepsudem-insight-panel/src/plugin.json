@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "name": "Insight (Zeynep Sudem)",
+  "id": "zeynepsudem-insight-panel",
+  "info": {
+    "keywords": [
+      "panel",
+      "mis233",
+      "zeynep sudem"
+    ],
+    "description": "Insight panel for MIS 233 final project. Developed by Zeynep Sudem.",
+    "author": {
+      "name": "Zeynep Sudem"
+    },
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=13.2.0",
+    "plugins": []
+  }
+}
