@@ -1,0 +1,12 @@
+{
+  "name": "mis233-grafana",
+  "private": true,
+  "description": "MIS 233 final project by Zeynep Sudem: Grafana panel + data source plugins, mock API.",
+  "scripts": {
+    "setup": "npm --prefix zeynepsudem-insight-panel install && npm --prefix zeynepsudem-campus-datasource install",
+    "build": "npm --prefix zeynepsudem-insight-panel run build && npm --prefix zeynepsudem-campus-datasource run build",
+    "test": "npm --prefix zeynepsudem-insight-panel run test:ci && npm --prefix zeynepsudem-campus-datasource run test:ci && npm --prefix mock-api test",
+    "start": "docker compose up -d --build",
+    "stop": "docker compose down"
+  }
+}

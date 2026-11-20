@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Campus Sensors (Zeynep Sudem)",
+  "id": "zeynepsudem-campus-datasource",
+  "metrics": true,
+  "info": {
+    "description": "Reads Bo\u011fazi\u00e7i campus sensor data from a REST API (time series and tables) with live WebSocket streaming. Developed by Zeynep Sudem for MIS 233.",
+    "author": {
+      "name": "Zeynep Sudem"
+    },
+    "keywords": [
+      "datasource",
+      "rest",
+      "websocket",
+      "mis233",
+      "zeynep sudem"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=13.2.0",
+    "plugins": []
+  },
+  "routes": [
+    {
+      "path": "api",
+      "url": "{{ .JsonData.apiUrl }}",
+      "headers": [
+        {
+          "name": "X-API-Key",
+          "content": "{{ .SecureJsonData.apiKey }}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "testdata"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Insight panel \u2013 temperature & humidity (TestData)",
+      "options": {
+        "displayMode": "area",
+        "lineColor": "purple",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true,
+        "threshold": 42
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "testdata"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "seriesCount": 1,
+          "alias": "temperature",
+          "startValue": 22,
+          "min": 10,
+          "max": 40,
+          "spread": 0.6
+        },
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "testdata"
+          },
+          "refId": "B",
+          "scenarioId": "random_walk",
+          "seriesCount": 1,
+          "alias": "humidity",
+          "startValue": 45,
+          "min": 20,
+          "max": 80,
+          "spread": 0.8
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "testdata"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 2,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Small panel (compact / responsive)",
+      "options": {
+        "displayMode": "points",
+        "lineColor": "orange",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "testdata"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "seriesCount": 1,
+          "alias": "cpu"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "testdata"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 3,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Empty query (no data state)",
+      "options": {
+        "displayMode": "line",
+        "lineColor": "green",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "testdata"
+          },
+          "refId": "A",
+          "scenarioId": "no_data_points"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Zeynep Sudem \u2013 Insight demo",
+  "uid": "mis233-insight-testdata",
+  "version": 1,
+  "weekStart": ""
+}

@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+  - name: Campus Sensors
+    uid: campus-sensors
+    type: zeynepsudem-campus-datasource
+    access: proxy
+    isDefault: true
+    editable: true
+    jsonData:
+      apiUrl: http://campus-api:8080/api
+      wsUrl: ws://localhost:8080/live
+    secureJsonData:
+      apiKey: mis233-demo-key
+
+  - name: TestData
+    uid: testdata
+    type: grafana-testdata-datasource
+    editable: true

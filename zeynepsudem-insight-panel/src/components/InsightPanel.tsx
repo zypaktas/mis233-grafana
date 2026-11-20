@@ -123,10 +123,21 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
 
   const mainStats = visible.length > 0 ? computeStats(visible[0].points) : undefined;
 
+  const errorText = (data.errors ?? (data.error ? [data.error] : []))
+    .map((e) => e.message)
+    .filter(Boolean)
+    .join(' · ');
+
   if (allSeries.length === 0) {
     return (
       <div className={styles.wrapper} style={{ width, height }}>
-        <div className={styles.empty}>No time series data. Add a query that returns a time field and a number field.</div>
+        <div className={styles.empty} data-testid="insight-empty">
+          {errorText ? (
+            <span className={styles.errorText}>⚠ {errorText}</span>
+          ) : (
+            'No time series data. Add a query that returns a time field and a number field.'
+          )}
+        </div>
         <div className={styles.footer} data-testid="developer-credit">
           {CREDIT}
         </div>
@@ -465,6 +476,9 @@ const getStyles = (theme: GrafanaTheme2) => ({
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  `,
+  errorText: css`
+    color: ${theme.colors.error.text};
   `,
   empty: css`
     flex: 1;

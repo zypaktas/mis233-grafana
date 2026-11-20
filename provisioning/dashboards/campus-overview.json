@@ -1,0 +1,325 @@
+{
+  "uid": "mis233-campus",
+  "title": "Campus Overview \u2013 Zeynep Sudem (MIS 233)",
+  "tags": [
+    "mis233",
+    "zeynep-sudem"
+  ],
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "building",
+        "label": "Building",
+        "type": "query",
+        "datasource": {
+          "type": "zeynepsudem-campus-datasource",
+          "uid": "campus-sensors"
+        },
+        "query": "buildings",
+        "definition": "buildings",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": "all",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "sort": 0
+      },
+      {
+        "name": "metric",
+        "label": "Metric",
+        "type": "query",
+        "datasource": {
+          "type": "zeynepsudem-campus-datasource",
+          "uid": "campus-sensors"
+        },
+        "query": "metrics",
+        "definition": "metrics",
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false,
+        "allValue": null,
+        "current": {
+          "text": "Temperature",
+          "value": "temperature"
+        },
+        "options": [],
+        "sort": 0
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Insight \u2013 $metric by building",
+      "datasource": {
+        "type": "zeynepsudem-campus-datasource",
+        "uid": "campus-sensors"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 15,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "displayMode": "line",
+        "lineColor": "purple",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "zeynepsudem-campus-datasource",
+            "uid": "campus-sensors"
+          },
+          "building": "$building",
+          "metric": "$metric",
+          "aggregation": "avg",
+          "interval": "auto",
+          "format": "timeseries"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Summary table (format: table)",
+      "datasource": {
+        "type": "zeynepsudem-campus-datasource",
+        "uid": "campus-sensors"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 9,
+        "x": 15,
+        "y": 0
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "minWidth": 60,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "\u0394 vs avg"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": -5
+                    },
+                    {
+                      "color": "orange",
+                      "value": 5
+                    },
+                    {
+                      "color": "red",
+                      "value": 15
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Building"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "zeynepsudem-campus-datasource",
+            "uid": "campus-sensors"
+          },
+          "building": "$building",
+          "metric": "$metric",
+          "aggregation": "avg",
+          "interval": "auto",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Min": true,
+              "Max": true,
+              "Samples": true
+            },
+            "renameByName": {
+              "Change vs avg": "\u0394 vs avg"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Energy use \u2013 max per hour (core Grafana panel, same data source)",
+      "datasource": {
+        "type": "zeynepsudem-campus-datasource",
+        "uid": "campus-sensors"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "zeynepsudem-campus-datasource",
+            "uid": "campus-sensors"
+          },
+          "building": "$building",
+          "metric": "energy",
+          "aggregation": "max",
+          "interval": "1h",
+          "format": "timeseries",
+          "alias": "{{building}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "zeynepsudem-insight-panel",
+      "title": "North Campus Library \u2013 occupancy (area, threshold 250)",
+      "datasource": {
+        "type": "zeynepsudem-campus-datasource",
+        "uid": "campus-sensors"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "options": {
+        "displayMode": "area",
+        "lineColor": "orange",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true,
+        "threshold": 250
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "zeynepsudem-campus-datasource",
+            "uid": "campus-sensors"
+          },
+          "building": "north-library",
+          "metric": "occupancy",
+          "aggregation": "avg",
+          "interval": "auto",
+          "format": "timeseries"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Error handling demo \u2013 unknown building",
+      "datasource": {
+        "type": "zeynepsudem-campus-datasource",
+        "uid": "campus-sensors"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "options": {
+        "displayMode": "line",
+        "lineColor": "green",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "zeynepsudem-campus-datasource",
+            "uid": "campus-sensors"
+          },
+          "building": "does-not-exist",
+          "metric": "temperature",
+          "aggregation": "avg",
+          "interval": "auto",
+          "format": "timeseries"
+        }
+      ]
+    }
+  ]
+}

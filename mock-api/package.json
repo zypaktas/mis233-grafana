@@ -1,0 +1,12 @@
+{
+  "name": "campus-sensor-api",
+  "version": "1.0.0",
+  "description": "Mock REST + WebSocket API for the Campus Grafana data source. Developed by Zeynep Sudem (MIS 233).",
+  "main": "server.js",
+  "author": "Zeynep Sudem",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  }
+}
