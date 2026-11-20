@@ -182,7 +182,7 @@ All plugins pass `tsc --noEmit` and ESLint (Grafana config) with no warnings.
 | **Test** (+1) | 52 unit tests + end-to-end smoke test | see *Tests* |
 | **Good code** (1–3) | TypeScript, pure functions separated from React components, no `any` in production code, lint clean, comments explain *why* | whole repo |
 | **Documentation** (+1) | this README, plugin READMEs, screenshots | |
-| **GitHub** (+1) | public repository: *link added on submission* | |
+| **GitHub** (+1) | public repository: https://github.com/zypaktas/mis233-grafana | |
 | **YouTube** (+1) | demo video: *link added on submission* | |
 | **VBB** | original AI idea (private, offline, self-evaluating), research method with ground truth and a sensitivity study | AI section |
 
