@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Combobox, ComboboxOption, InlineField, Input, RadioButtonGroup, Stack, Text } from '@grafana/ui';
+import { Alert, Combobox, ComboboxOption, InlineField, InlineSwitch, Input, RadioButtonGroup, Stack, Text } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from '../datasource';
@@ -129,6 +129,16 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
             onChange={(e) => update({ alias: e.currentTarget.value }, false)}
             onBlur={() => onRunQuery()}
           />
+        </InlineField>
+      </Stack>
+      <Stack gap={1}>
+        <InlineField
+          label="Live (WebSocket)"
+          labelWidth={18}
+          tooltip="Loads the history over REST, then streams one new point per second over WebSocket"
+          disabled={q.format === 'table'}
+        >
+          <InlineSwitch value={!!q.live} onChange={(e) => update({ live: e.currentTarget.checked })} />
         </InlineField>
       </Stack>
       <Text variant="bodySmall" color="secondary">

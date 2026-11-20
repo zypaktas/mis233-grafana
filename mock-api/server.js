@@ -4,11 +4,12 @@
  * zeynepsudem-campus-datasource Grafana plugin.
  *
  * Developed by Zeynep Sudem for MIS 233 (Boğaziçi University), Fall 2026.
- * No dependencies for the REST part: only Node's built-in http module.
+ * REST uses only Node's built-in http module; the live stream uses the `ws` package.
  */
 const http = require('http');
 const { URL } = require('url');
 const { BUILDINGS, METRICS, AGGREGATIONS, MINUTE, valueAt, series } = require('./data');
+const { attachLive } = require('./live');
 
 const PORT = Number(process.env.PORT || 8080);
 const API_KEY = process.env.API_KEY || ''; // when set, requests must send X-API-Key
@@ -179,11 +180,13 @@ function handler(req, res) {
 }
 
 function createServer() {
-  return http.createServer(handler);
+  const server = http.createServer(handler);
+  attachLive(server);
+  return server;
 }
 
 if (require.main === module) {
-  createServer().listen(PORT, () => console.log(`Campus Sensor API listening on :${PORT} (developer: Zeynep Sudem)`));
+  createServer().listen(PORT, () => console.log(`Campus Sensor API listening on :${PORT}, WebSocket on /live (developer: Zeynep Sudem)`));
 }
 
 module.exports = { createServer, handler };

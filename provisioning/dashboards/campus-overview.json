@@ -286,6 +286,45 @@
       ]
     },
     {
+      "id": 6,
+      "type": "zeynepsudem-insight-panel",
+      "title": "LIVE \u2013 energy use, streamed every second over WebSocket",
+      "datasource": {
+        "type": "zeynepsudem-campus-datasource",
+        "uid": "campus-sensors"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "timeFrom": "10m",
+      "hideTimeOverride": false,
+      "options": {
+        "displayMode": "line",
+        "lineColor": "red",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "zeynepsudem-campus-datasource",
+            "uid": "campus-sensors"
+          },
+          "building": "north-library,kilyos-dorm",
+          "metric": "energy",
+          "aggregation": "avg",
+          "interval": "1m",
+          "format": "timeseries",
+          "live": true
+        }
+      ]
+    },
+    {
       "id": 5,
       "type": "zeynepsudem-insight-panel",
       "title": "Error handling demo \u2013 unknown building",
@@ -297,7 +336,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 31
       },
       "options": {
         "displayMode": "line",

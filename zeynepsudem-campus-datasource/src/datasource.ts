@@ -2,16 +2,16 @@ import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 import {
   CoreApp,
   DataFrame,
-  DataQueryError,
   DataQueryRequest,
   DataQueryResponse,
   DataSourceApi,
   DataSourceInstanceSettings,
+  LoadingState,
   MetricFindValue,
   ScopedVars,
   TestDataSourceResponse,
 } from '@grafana/data';
-import { lastValueFrom } from 'rxjs';
+import { catchError, from as fromPromise, lastValueFrom, map, merge, mergeMap, Observable, of } from 'rxjs';
 
 import {
   ApiOption,
@@ -22,6 +22,7 @@ import {
   DEFAULT_QUERY,
 } from './types';
 import { describeError, seriesToFrames, summaryToFrame } from './convert';
+import { liveStream } from './live';
 
 /**
  * Campus Sensors data source.
@@ -61,7 +62,7 @@ export class DataSource extends DataSourceApi<CampusQuery, CampusOptions> {
     };
   }
 
-  async query(options: DataQueryRequest<CampusQuery>): Promise<DataQueryResponse> {
+  query(options: DataQueryRequest<CampusQuery>): Observable<DataQueryResponse> {
     const from = options.range.from.valueOf();
     const to = options.range.to.valueOf();
 
@@ -69,36 +70,62 @@ export class DataSource extends DataSourceApi<CampusQuery, CampusOptions> {
       .filter((t) => this.filterQuery(t))
       .map((t) => this.applyTemplateVariables({ ...DEFAULT_QUERY, ...t } as CampusQuery, options.scopedVars));
 
-    // Run all queries in parallel; one failing query must not hide the others.
-    const results = await Promise.allSettled(targets.map((t) => this.runQuery(t, from, to)));
+    if (targets.length === 0) {
+      return of({ data: [] });
+    }
 
-    const data: DataFrame[] = [];
-    const errors: DataQueryError[] = [];
-    results.forEach((r, i) => {
-      if (r.status === 'fulfilled') {
-        data.push(...r.value);
-      } else {
-        errors.push({ refId: targets[i].refId, message: describeError(r.reason, this.apiUrl) });
+    // Each query becomes its own stream, so one failing query does not hide the others
+    // and live queries can keep emitting after the normal ones have finished.
+    const streams = targets.map((t) => {
+      const fail = (err: unknown) =>
+        of<DataQueryResponse>({
+          key: t.refId,
+          data: [],
+          state: LoadingState.Error,
+          errors: [{ refId: t.refId, message: describeError(err, this.apiUrl) }],
+        });
+
+      if (t.live && t.format !== 'table') {
+        if (!this.wsUrl) {
+          return fail(new Error('Live mode needs a WebSocket URL in the data source settings.'));
+        }
+        return fromPromise(this.fetchSeries(t, from, to)).pipe(
+          mergeMap((history) => liveStream({ wsUrl: this.wsUrl!, query: t, history, windowMs: to - from })),
+          catchError(fail)
+        );
       }
+      return fromPromise(this.runQuery(t, from, to)).pipe(
+        map((data): DataQueryResponse => ({ key: t.refId, data, state: LoadingState.Done })),
+        catchError(fail)
+      );
     });
 
-    return { data, errors: errors.length ? errors : undefined };
+    return merge(...streams);
   }
 
-  private async runQuery(query: CampusQuery, from: number, to: number): Promise<DataFrame[]> {
-    const params = {
+  private fetchSeries(query: CampusQuery, from: number, to: number): Promise<ApiSeriesResponse> {
+    return this.get<ApiSeriesResponse>('/series', {
       metric: query.metric,
       building: query.building,
       from: String(from),
       to: String(to),
       interval: query.interval || 'auto',
-    };
+      agg: query.aggregation || 'avg',
+    });
+  }
+
+  private async runQuery(query: CampusQuery, from: number, to: number): Promise<DataFrame[]> {
     if (query.format === 'table') {
-      const res = await this.get<ApiSummaryResponse>('/summary', params);
+      const res = await this.get<ApiSummaryResponse>('/summary', {
+        metric: query.metric,
+        building: query.building,
+        from: String(from),
+        to: String(to),
+        interval: query.interval || 'auto',
+      });
       return [summaryToFrame(res, query)];
     }
-    const res = await this.get<ApiSeriesResponse>('/series', { ...params, agg: query.aggregation || 'avg' });
-    return seriesToFrames(res, query);
+    return seriesToFrames(await this.fetchSeries(query, from, to), query);
   }
 
   /** GET through the Grafana data proxy. Throws the FetchError on non-2xx. */

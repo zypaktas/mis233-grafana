@@ -109,4 +109,19 @@ function series(buildingId, metric, from, to, stepMs, agg) {
   return points;
 }
 
-module.exports = { BUILDINGS, METRICS, AGGREGATIONS, MINUTE, valueAt, series, hash01 };
+/**
+ * Second-resolution value for live streaming: linear interpolation between the
+ * 1-minute values plus a little per-second jitter, so the live line matches
+ * the historical data but still moves every second.
+ */
+function liveValueAt(buildingId, metric, t) {
+  const minuteStart = Math.floor(t / MINUTE) * MINUTE;
+  const a = valueAt(buildingId, metric, minuteStart);
+  const b = valueAt(buildingId, metric, minuteStart + MINUTE);
+  const frac = (t - minuteStart) / MINUTE;
+  const second = Math.floor(t / 1000);
+  const jitter = gaussian('live', buildingId, metric.id, second) * metric.noise * 0.25;
+  return Math.round((a + (b - a) * frac + jitter) * 100) / 100;
+}
+
+module.exports = { BUILDINGS, METRICS, AGGREGATIONS, MINUTE, valueAt, liveValueAt, series, hash01 };

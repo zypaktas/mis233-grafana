@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { dateTimeFormat, GrafanaTheme2, PanelProps } from '@grafana/data';
+import { dateTimeFormat, GrafanaTheme2, LoadingState, PanelProps } from '@grafana/data';
 import { useStyles2, useTheme2 } from '@grafana/ui';
 import { css } from '@emotion/css';
 import { InsightOptions } from '../types';
@@ -43,12 +43,24 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
       : theme.visualization.getColorByName(theme.visualization.palette[index % theme.visualization.palette.length]);
 
   // ----- scales -----
-  const tMin = timeRange.from.valueOf();
-  const tMax = timeRange.to.valueOf();
+  // While a live (streaming) query runs, slide the window so the newest point stays at the right edge.
+  const streaming = data.state === LoadingState.Streaming;
+  let tMin = timeRange.from.valueOf();
+  let tMax = timeRange.to.valueOf();
+  if (streaming) {
+    const lastT = Math.max(...allSeries.map((s) => s.points[s.points.length - 1].t));
+    if (lastT > tMax) {
+      tMin += lastT - tMax;
+      tMax = lastT;
+    }
+  }
   let vMin = Infinity;
   let vMax = -Infinity;
   for (const s of visible) {
     for (const p of s.points) {
+      if (p.t < tMin || p.t > tMax) {
+        continue;
+      }
       vMin = Math.min(vMin, p.v);
       vMax = Math.max(vMax, p.v);
     }
@@ -222,9 +234,13 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
           {/* series */}
           {visible.map((s) => {
             const color = colorFor(allSeries.indexOf(s));
-            const path = s.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join('');
-            const first = s.points[0];
-            const last = s.points[s.points.length - 1];
+            const pts = s.points.filter((p) => p.t >= tMin && p.t <= tMax);
+            if (pts.length === 0) {
+              return null;
+            }
+            const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join('');
+            const first = pts[0];
+            const last = pts[pts.length - 1];
             return (
               <g key={s.name} data-testid="insight-series">
                 {options.displayMode === 'area' && (
@@ -239,7 +255,7 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
                   <path d={path} fill="none" stroke={color} strokeWidth={options.lineWidth} strokeLinejoin="round" />
                 )}
                 {(options.displayMode === 'points' || threshold !== undefined) &&
-                  s.points.map((p) => {
+                  pts.map((p) => {
                     const over = threshold !== undefined && p.v > threshold;
                     if (options.displayMode !== 'points' && !over) {
                       return null;
@@ -339,7 +355,14 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
             {mainStats && ` (${pinned.point.v >= mainStats.mean ? '+' : ''}${formatValue(pinned.point.v - mainStats.mean)} vs mean)`}
           </span>
         ) : (
-          <span data-testid="developer-credit">{CREDIT}</span>
+          <span data-testid="developer-credit">
+            {streaming && (
+              <span className={styles.live} data-testid="insight-live">
+                ● LIVE
+              </span>
+            )}
+            {CREDIT}
+          </span>
         )}
       </div>
     </div>
@@ -476,6 +499,17 @@ const getStyles = (theme: GrafanaTheme2) => ({
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  `,
+  live: css`
+    color: ${theme.colors.error.text};
+    font-weight: ${theme.typography.fontWeightBold};
+    margin-right: ${theme.spacing(1)};
+    animation: insightPulse 1.6s ease-in-out infinite;
+    @keyframes insightPulse {
+      50% {
+        opacity: 0.35;
+      }
+    }
   `,
   errorText: css`
     color: ${theme.colors.error.text};
