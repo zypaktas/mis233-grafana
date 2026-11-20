@@ -28,30 +28,52 @@
         "uid": "trlxrdZVk"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 11,
+        "w": 16,
         "x": 0,
         "y": 0
       },
       "id": 1,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Insight panel \u2013 temperature & humidity (TestData)",
       "options": {
-        "seriesCountSize": "sm",
-        "showSeriesCount": false,
-        "text": "Default value of text input option"
+        "displayMode": "area",
+        "lineColor": "purple",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true,
+        "threshold": 42
       },
       "targets": [
         {
           "datasource": {
             "type": "grafana-testdata-datasource",
-            "uid": "db84e60d-b92a-4089-82cb-34842fb1754b"
+            "uid": "trlxrdZVk"
           },
           "refId": "A",
-          "scenarioId": "raw_frame",
-          "rawFrameContent": "[\n  {\n    \"columns\": [\n      {\n        \"text\": \"Time\",\n        \"type\": \"time\"\n      },\n      {\n        \"text\": \"Label\",\n        \"type\": \"string\"\n      },\n      {\n        \"text\": \"Value\",\n        \"type\": \"number\"\n      }\n    ],\n    \"rows\": [\n      [1609459200000, \"A\", 10],\n      [1609462800000, \"B\", 20],\n      [1609466400000, \"C\", 15],\n      [1609470000000, \"D\", 25],\n      [1609473600000, \"E\", 30]\n    ]\n  },\n{\n    \"columns\": [\n      {\n        \"text\": \"Time\",\n        \"type\": \"time\"\n      },\n      {\n        \"text\": \"Label\",\n        \"type\": \"string\"\n      },\n      {\n        \"text\": \"Value\",\n        \"type\": \"number\"\n      }\n    ],\n    \"rows\": [\n      [1609459200000, \"A\", 40],\n      [1609462800000, \"B\", 50],\n      [1609466400000, \"C\", 45],\n      [1609470000000, \"D\", 55],\n      [1609473600000, \"E\", 60]\n    ]\n  }\n]"
+          "scenarioId": "random_walk",
+          "seriesCount": 1,
+          "alias": "temperature",
+          "startValue": 22,
+          "min": 10,
+          "max": 40,
+          "spread": 0.6
+        },
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          },
+          "refId": "B",
+          "scenarioId": "random_walk",
+          "seriesCount": 1,
+          "alias": "humidity",
+          "startValue": 45,
+          "min": 20,
+          "max": 80,
+          "spread": 0.8
         }
-      ],
-      "title": "Sample Panel Title",
-      "type": "zeynepsudem-insight-panel"
+      ]
     },
     {
       "datasource": {
@@ -59,30 +81,65 @@
         "uid": "trlxrdZVk"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
+        "h": 11,
+        "w": 8,
+        "x": 16,
         "y": 0
       },
       "id": 2,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Small panel (compact / responsive)",
       "options": {
-        "seriesCountSize": "sm",
-        "showSeriesCount": false,
-        "text": "Default value of text input option"
+        "displayMode": "points",
+        "lineColor": "orange",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": false
       },
       "targets": [
         {
-          "alias": "",
           "datasource": {
             "type": "grafana-testdata-datasource",
-            "uid": "db84e60d-b92a-4089-82cb-34842fb1754b"
+            "uid": "trlxrdZVk"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "seriesCount": 1,
+          "alias": "cpu"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 3,
+      "type": "zeynepsudem-insight-panel",
+      "title": "Empty query (no data state)",
+      "options": {
+        "displayMode": "line",
+        "lineColor": "green",
+        "lineWidth": 2,
+        "showStats": true,
+        "showGrid": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
           },
           "refId": "A",
           "scenarioId": "no_data_points"
         }
-      ],
-      "title": "Sample Panel Title",
-      "type": "zeynepsudem-insight-panel"
+      ]
     }
   ],
   "refresh": "",
@@ -97,7 +154,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Provisioned insight dashboard",
+  "title": "Zeynep Sudem \u2013 Insight demo",
   "uid": "a538aeff-5a8a-42a5-901c-938d896fdd6f",
   "version": 1,
   "weekStart": ""
