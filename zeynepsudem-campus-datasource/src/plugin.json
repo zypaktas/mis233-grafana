@@ -9,13 +9,7 @@
     "author": {
       "name": "Zeynep Sudem"
     },
-    "keywords": [
-      "datasource",
-      "rest",
-      "websocket",
-      "mis233",
-      "zeynep sudem"
-    ],
+    "keywords": ["datasource", "rest", "websocket", "mis233", "zeynep sudem"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"

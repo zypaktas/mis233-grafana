@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Combobox, ComboboxOption, InlineField, InlineSwitch, Input, RadioButtonGroup, Stack, Text } from '@grafana/ui';
+import {
+  Alert,
+  Combobox,
+  ComboboxOption,
+  InlineField,
+  InlineSwitch,
+  Input,
+  RadioButtonGroup,
+  Stack,
+  Text,
+} from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from '../datasource';
@@ -105,9 +115,18 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
           tooltip="How the 1-minute samples inside each interval are combined"
           disabled={q.format === 'table'}
         >
-          <Combobox width={16} options={AGGREGATIONS} value={q.aggregation} onChange={(o) => update({ aggregation: o.value })} />
+          <Combobox
+            width={16}
+            options={AGGREGATIONS}
+            value={q.aggregation}
+            onChange={(o) => update({ aggregation: o.value })}
+          />
         </InlineField>
-        <InlineField label="Interval" labelWidth={10} tooltip="Distance between points. auto ≈ 300 points for the range">
+        <InlineField
+          label="Interval"
+          labelWidth={10}
+          tooltip="Distance between points. auto ≈ 300 points for the range"
+        >
           <Combobox
             width={12}
             options={INTERVALS}
@@ -139,6 +158,14 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
           disabled={q.format === 'table'}
         >
           <InlineSwitch value={!!q.live} onChange={(e) => update({ live: e.currentTarget.checked })} />
+        </InlineField>
+        <InlineField
+          label="Ground-truth labels"
+          labelWidth={20}
+          tooltip="Adds the API's injected-anomaly labels (anomaly_truth field), used by the Insight panel to score its AI"
+          disabled={q.format === 'table'}
+        >
+          <InlineSwitch value={!!q.includeTruth} onChange={(e) => update({ includeTruth: e.currentTarget.checked })} />
         </InlineField>
       </Stack>
       <Text variant="bodySmall" color="secondary">

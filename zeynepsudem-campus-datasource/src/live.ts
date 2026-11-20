@@ -12,9 +12,7 @@ export interface LivePointsMessage {
 }
 
 type ServerMessage =
-  | LivePointsMessage
-  | { type: 'hello' | 'subscribed' | 'unsubscribed' }
-  | { type: 'error'; message: string };
+  LivePointsMessage | { type: 'hello' | 'subscribed' | 'unsubscribed' } | { type: 'error'; message: string };
 
 export interface LiveOptions {
   wsUrl: string;
@@ -34,7 +32,11 @@ export interface LiveOptions {
  * not seen yet, and drops points that fell out of the sliding window.
  * Pure function: easy to unit test.
  */
-export function appendLivePoints(state: ApiSeriesResponse, msg: LivePointsMessage, windowMs: number): ApiSeriesResponse {
+export function appendLivePoints(
+  state: ApiSeriesResponse,
+  msg: LivePointsMessage,
+  windowMs: number
+): ApiSeriesResponse {
   const cutoff = msg.t - windowMs;
   for (const p of msg.points) {
     let s = state.series.find((x) => x.building === p.building);
@@ -44,7 +46,8 @@ export function appendLivePoints(state: ApiSeriesResponse, msg: LivePointsMessag
     }
     const last = s.points[s.points.length - 1];
     if (!last || msg.t > last[0]) {
-      s.points.push([msg.t, p.v]);
+      // Live points carry no ground truth; keep the tuple shape of the history.
+      s.points.push(last && last.length === 3 ? [msg.t, p.v, 0] : [msg.t, p.v]);
     }
     let drop = 0;
     while (drop < s.points.length && s.points[drop][0] < cutoff) {
@@ -98,7 +101,9 @@ export function liveStream(opts: LiveOptions): Observable<DataQueryResponse> {
       }
       socket.onopen = () => {
         retry = opts.retryMs ?? 2000;
-        socket!.send(JSON.stringify({ type: 'subscribe', metric: query.metric, building: query.building, intervalMs: 1000 }));
+        socket!.send(
+          JSON.stringify({ type: 'subscribe', metric: query.metric, building: query.building, intervalMs: 1000 })
+        );
       };
       socket.onmessage = (event: MessageEvent) => {
         let msg: ServerMessage;

@@ -13,14 +13,7 @@ import {
 } from '@grafana/data';
 import { catchError, from as fromPromise, lastValueFrom, map, merge, mergeMap, Observable, of } from 'rxjs';
 
-import {
-  ApiOption,
-  ApiSeriesResponse,
-  ApiSummaryResponse,
-  CampusOptions,
-  CampusQuery,
-  DEFAULT_QUERY,
-} from './types';
+import { ApiOption, ApiSeriesResponse, ApiSummaryResponse, CampusOptions, CampusQuery, DEFAULT_QUERY } from './types';
 import { describeError, seriesToFrames, summaryToFrame } from './convert';
 import { liveStream } from './live';
 
@@ -111,6 +104,7 @@ export class DataSource extends DataSourceApi<CampusQuery, CampusOptions> {
       to: String(to),
       interval: query.interval || 'auto',
       agg: query.aggregation || 'avg',
+      ...(query.includeTruth ? { truth: '1' } : {}),
     });
   }
 

@@ -17,6 +17,8 @@ export interface CampusQuery extends DataQuery {
   alias?: string;
   /** Stream new points over WebSocket (time series only). */
   live?: boolean;
+  /** Ask the API for its ground-truth anomaly labels (adds an `anomaly_truth` field, 0/1). */
+  includeTruth?: boolean;
 }
 
 export const DEFAULT_QUERY: Partial<CampusQuery> = {
@@ -48,7 +50,7 @@ export interface ApiSeriesResponse {
   unit: string;
   interval_ms: number;
   aggregation: Aggregation;
-  series: Array<{ building: string; name: string; points: Array<[number, number]> }>;
+  series: Array<{ building: string; name: string; points: Array<[number, number] | [number, number, number]> }>;
 }
 
 export interface ApiSummaryResponse {

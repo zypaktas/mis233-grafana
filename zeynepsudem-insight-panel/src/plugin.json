@@ -4,11 +4,7 @@
   "name": "Insight (Zeynep Sudem)",
   "id": "zeynepsudem-insight-panel",
   "info": {
-    "keywords": [
-      "panel",
-      "mis233",
-      "zeynep sudem"
-    ],
+    "keywords": ["panel", "mis233", "zeynep sudem"],
     "description": "Insight panel for MIS 233 final project. Developed by Zeynep Sudem.",
     "author": {
       "name": "Zeynep Sudem"

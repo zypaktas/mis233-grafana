@@ -50,6 +50,12 @@ function buildingFactor(buildingId) {
   return 0.75 + hash01('factor', buildingId) * 0.5; // 0.75 .. 1.25
 }
 
+/** Ground truth: true when an anomaly was injected at this minute. */
+function isAnomalyAt(buildingId, metricId, t) {
+  const event = Math.floor(Math.floor(t / MINUTE) / 7);
+  return hash01('anomaly', buildingId, metricId, event) < 0.01;
+}
+
 /** Value of one metric for one building at time t (ms), sampled on a 1-minute grid. */
 function valueAt(buildingId, metric, t) {
   const minute = Math.floor(t / MINUTE);
@@ -70,7 +76,7 @@ function valueAt(buildingId, metric, t) {
 
   // Rare anomalies: ~1 in 700 minutes, lasting a few minutes.
   const event = Math.floor(minute / 7);
-  if (hash01('anomaly', buildingId, metric.id, event) < 0.01) {
+  if (isAnomalyAt(buildingId, metric.id, t)) {
     const dir = hash01('dir', buildingId, metric.id, event) < 0.7 ? 1 : -1;
     v += dir * (metric.noise * 8 + Math.abs(metric.daily) * 0.6);
   }
@@ -95,16 +101,22 @@ const AGGREGATIONS = {
  * Points between from and to, one per `stepMs`, each the aggregation of the 1-minute
  * samples inside its bucket.
  */
-function series(buildingId, metric, from, to, stepMs, agg) {
+function series(buildingId, metric, from, to, stepMs, agg, withTruth = false) {
   const aggFn = AGGREGATIONS[agg];
   const points = [];
   const start = Math.ceil(from / stepMs) * stepMs;
   for (let t = start; t <= to; t += stepMs) {
     const samples = [];
+    let anomalous = false;
     for (let s = t - stepMs + MINUTE; s <= t; s += MINUTE) {
       samples.push(valueAt(buildingId, metric, s));
+      anomalous = anomalous || isAnomalyAt(buildingId, metric.id, s);
     }
-    points.push([t, Math.round(aggFn(samples) * 100) / 100]);
+    const point = [t, Math.round(aggFn(samples) * 100) / 100];
+    if (withTruth) {
+      point.push(anomalous ? 1 : 0);
+    }
+    points.push(point);
   }
   return points;
 }
@@ -124,4 +136,4 @@ function liveValueAt(buildingId, metric, t) {
   return Math.round((a + (b - a) * frac + jitter) * 100) / 100;
 }
 
-module.exports = { BUILDINGS, METRICS, AGGREGATIONS, MINUTE, valueAt, liveValueAt, series, hash01 };
+module.exports = { BUILDINGS, METRICS, AGGREGATIONS, MINUTE, valueAt, liveValueAt, isAnomalyAt, series, hash01 };

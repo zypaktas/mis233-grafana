@@ -4,6 +4,8 @@ import { useStyles2, useTheme2 } from '@grafana/ui';
 import { css } from '@emotion/css';
 import { InsightOptions } from '../types';
 import { computeStats, formatValue, framesToSeries, nearestIndex, niceTicks, Point, Series } from '../utils/series';
+import { useInsightAI } from '../ai/useInsightAI';
+import { summarize } from '../ai/insight';
 
 interface Props extends PanelProps<InsightOptions> {}
 
@@ -14,7 +16,15 @@ const DRAG_THRESHOLD_PX = 6;
 
 export const CREDIT = 'Developed by Zeynep Sudem · MIS 233 · Fall 2026';
 
-export const InsightPanel: React.FC<Props> = ({ options, data, width, height, timeRange, timeZone, onChangeTimeRange }) => {
+export const InsightPanel: React.FC<Props> = ({
+  options,
+  data,
+  width,
+  height,
+  timeRange,
+  timeZone,
+  onChangeTimeRange,
+}) => {
   const theme = useTheme2();
   const styles = useStyles2(getStyles);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -30,9 +40,36 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
   const compact = width < COMPACT_WIDTH || height < COMPACT_HEIGHT;
   const showStats = options.showStats && !compact;
   const statsHeight = showStats ? 40 : 0;
+
+  // ----- AI: forecast + anomaly detection on one series, trained in the browser -----
+  const streaming = data.state === LoadingState.Streaming;
+  const aiEnabled = options.aiEnabled ?? true;
+  const aiTarget =
+    visible.find((s) => options.aiSeries && s.name.toLowerCase().includes(options.aiSeries.toLowerCase())) ??
+    visible[0];
+  const ai = useInsightAI(aiTarget, aiEnabled, options.aiHorizon ?? 24, options.aiSensitivity ?? 3.5, streaming);
+  const aiResult = aiEnabled && ai.seriesName === aiTarget?.name ? ai.result : undefined;
+  const aiColor = theme.colors.warning.main;
+  const showAiSummary = aiEnabled && (options.aiShowSummary ?? true) && !compact && height > 260;
+  const aiLines = showAiSummary
+    ? aiResult && aiTarget
+      ? summarize(
+          aiTarget.name,
+          aiTarget.points,
+          aiResult,
+          formatValue,
+          (t) => dateTimeFormat(t, { format: 'MMM D HH:mm', timeZone }),
+          options.aiSensitivity ?? 3.5
+        )
+      : ai.error
+        ? [ai.error]
+        : []
+    : [];
+  const aiHeight = aiLines.length ? aiLines.length * 16 + 10 : 0;
+
   const legendHeight = allSeries.length > 1 && !compact ? 22 : 0;
   const footerHeight = 18;
-  const chartHeight = Math.max(20, height - statsHeight - legendHeight - footerHeight);
+  const chartHeight = Math.max(20, height - statsHeight - aiHeight - legendHeight - footerHeight);
   const margin = compact ? { top: 6, right: 6, bottom: 6, left: 6 } : { top: 8, right: 12, bottom: 22, left: 48 };
   const innerW = Math.max(10, width - margin.left - margin.right);
   const innerH = Math.max(10, chartHeight - margin.top - margin.bottom);
@@ -44,7 +81,6 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
 
   // ----- scales -----
   // While a live (streaming) query runs, slide the window so the newest point stays at the right edge.
-  const streaming = data.state === LoadingState.Streaming;
   let tMin = timeRange.from.valueOf();
   let tMax = timeRange.to.valueOf();
   if (streaming) {
@@ -54,8 +90,18 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
       tMax = lastT;
     }
   }
+  // Make room on the right for the AI forecast.
+  const dataEnd = tMax;
+  const forecast = aiResult?.forecast ?? [];
+  if (forecast.length > 0) {
+    tMax = Math.max(tMax, forecast[forecast.length - 1].t);
+  }
   let vMin = Infinity;
   let vMax = -Infinity;
+  for (const f of forecast) {
+    vMin = Math.min(vMin, f.lo);
+    vMax = Math.max(vMax, f.hi);
+  }
   for (const s of visible) {
     for (const p of s.points) {
       if (p.t < tMin || p.t > tMax) {
@@ -134,8 +180,10 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
       : [];
 
   const mainStats = visible.length > 0 ? computeStats(visible[0].points) : undefined;
+  const pinnedAnomaly =
+    pinned && pinned.series === aiTarget?.name ? aiResult?.anomalies.find((a) => a.t === pinned.point.t) : undefined;
 
-  const errorText = (data.errors ?? (data.error ? [data.error] : []))
+  const errorText = (data.errors ?? [])
     .map((e) => e.message)
     .filter(Boolean)
     .join(' · ');
@@ -172,6 +220,16 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
               warn={countAbove(visible, threshold) > 0}
             />
           )}
+        </div>
+      )}
+
+      {aiLines.length > 0 && (
+        <div className={styles.aiBox} style={{ height: aiHeight }} data-testid="insight-ai-summary">
+          {aiLines.map((line) => (
+            <div key={line} className={styles.aiLine} title={line}>
+              🤖 {line}
+            </div>
+          ))}
         </div>
       )}
 
@@ -274,6 +332,57 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
             );
           })}
 
+          {/* AI forecast: 95% band, dashed line, "now" divider */}
+          {forecast.length > 0 && aiTarget && (
+            <g pointerEvents="none" data-testid="insight-ai-forecast">
+              <line
+                x1={x(dataEnd)}
+                x2={x(dataEnd)}
+                y1={0}
+                y2={innerH}
+                stroke={theme.colors.border.medium}
+                strokeDasharray="2 4"
+              />
+              <path
+                d={
+                  forecast.map((f, i) => `${i === 0 ? 'M' : 'L'}${x(f.t).toFixed(1)},${y(f.hi).toFixed(1)}`).join('') +
+                  [...forecast]
+                    .reverse()
+                    .map((f) => `L${x(f.t).toFixed(1)},${y(f.lo).toFixed(1)}`)
+                    .join('') +
+                  'Z'
+                }
+                fill={aiColor}
+                fillOpacity={0.13}
+              />
+              <path
+                d={
+                  `M${x(aiTarget.points[aiTarget.points.length - 1].t).toFixed(1)},${y(aiTarget.points[aiTarget.points.length - 1].v).toFixed(1)}` +
+                  forecast.map((f) => `L${x(f.t).toFixed(1)},${y(f.v).toFixed(1)}`).join('')
+                }
+                fill="none"
+                stroke={aiColor}
+                strokeWidth={Math.max(1.5, options.lineWidth)}
+                strokeDasharray="6 4"
+              />
+              {!compact && (
+                <text x={x(dataEnd) + 4} y={10} className={styles.axisText} style={{ fill: aiColor }}>
+                  AI forecast
+                </text>
+              )}
+            </g>
+          )}
+
+          {/* AI anomalies */}
+          {aiResult?.anomalies
+            .filter((a) => a.t >= tMin && a.t <= tMax)
+            .map((a) => (
+              <g key={`an${a.t}`} pointerEvents="none" data-testid="insight-ai-anomaly">
+                <circle cx={x(a.t)} cy={y(a.v)} r={6} fill="none" stroke={aiColor} strokeWidth={2} />
+                <line x1={x(a.t)} x2={x(a.t)} y1={y(a.v)} y2={y(a.expected)} stroke={aiColor} strokeDasharray="2 2" />
+              </g>
+            ))}
+
           {/* drag-to-zoom selection */}
           {dragStartX !== null && hoverX !== null && Math.abs(hoverX - dragStartX) > DRAG_THRESHOLD_PX && (
             <rect
@@ -289,9 +398,23 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
           {/* hover crosshair */}
           {hoverX !== null && (
             <g pointerEvents="none">
-              <line x1={hoverX} x2={hoverX} y1={0} y2={innerH} stroke={theme.colors.text.secondary} strokeDasharray="3 3" />
+              <line
+                x1={hoverX}
+                x2={hoverX}
+                y1={0}
+                y2={innerH}
+                stroke={theme.colors.text.secondary}
+                strokeDasharray="3 3"
+              />
               {hoverRows.map((r) => (
-                <circle key={r.name} cx={x(r.point.t)} cy={y(r.point.v)} r={4} fill={r.color} stroke={theme.colors.background.primary} />
+                <circle
+                  key={r.name}
+                  cx={x(r.point.t)}
+                  cy={y(r.point.v)}
+                  r={4}
+                  fill={r.color}
+                  stroke={theme.colors.background.primary}
+                />
               ))}
             </g>
           )}
@@ -299,7 +422,14 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
           {/* pinned point */}
           {pinned && (
             <g pointerEvents="none" data-testid="insight-pinned">
-              <circle cx={x(pinned.point.t)} cy={y(pinned.point.v)} r={7} fill="none" stroke={theme.colors.warning.main} strokeWidth={2} />
+              <circle
+                cx={x(pinned.point.t)}
+                cy={y(pinned.point.v)}
+                r={7}
+                fill="none"
+                stroke={theme.colors.warning.main}
+                strokeWidth={2}
+              />
             </g>
           )}
 
@@ -327,6 +457,15 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
               <b>{formatValue(r.point.v)}</b>
             </div>
           ))}
+          {hoverT !== null && hoverT > dataEnd && forecast.length > 0 && (
+            <div className={styles.tooltipRow} style={{ color: aiColor }}>
+              🤖 AI forecast {formatValue(forecast[nearestIndex(forecast, hoverT)].v)} (±
+              {formatValue(
+                (forecast[nearestIndex(forecast, hoverT)].hi - forecast[nearestIndex(forecast, hoverT)].lo) / 2
+              )}
+              )
+            </div>
+          )}
           <div className={styles.hint}>click: pin · drag: zoom</div>
         </div>
       )}
@@ -352,7 +491,10 @@ export const InsightPanel: React.FC<Props> = ({ options, data, width, height, ti
         {pinned ? (
           <span data-testid="insight-pinned-info">
             📌 {pinned.series} = <b>{formatValue(pinned.point.v)}</b> at {fmtTime(pinned.point.t)}
-            {mainStats && ` (${pinned.point.v >= mainStats.mean ? '+' : ''}${formatValue(pinned.point.v - mainStats.mean)} vs mean)`}
+            {mainStats &&
+              ` (${pinned.point.v >= mainStats.mean ? '+' : ''}${formatValue(pinned.point.v - mainStats.mean)} vs mean)`}
+            {pinnedAnomaly &&
+              ` · 🤖 AI anomaly ${pinnedAnomaly.z > 0 ? '+' : ''}${pinnedAnomaly.z.toFixed(1)}σ, expected ≈ ${formatValue(pinnedAnomaly.expected)}`}
           </span>
         ) : (
           <span data-testid="developer-credit">
@@ -382,7 +524,12 @@ function closestPoint(series: Series[], t: number): { series: string; point: Poi
   return i >= 0 ? { series: s.name, point: s.points[i] } : null;
 }
 
-const Stat: React.FC<{ label: string; value?: number; text?: string; warn?: boolean }> = ({ label, value, text, warn }) => {
+const Stat: React.FC<{ label: string; value?: number; text?: string; warn?: boolean }> = ({
+  label,
+  value,
+  text,
+  warn,
+}) => {
   const styles = useStyles2(getStyles);
   return (
     <div className={styles.stat}>
@@ -510,6 +657,19 @@ const getStyles = (theme: GrafanaTheme2) => ({
         opacity: 0.35;
       }
     }
+  `,
+  aiBox: css`
+    padding: 2px ${theme.spacing(1)} 4px;
+    font-size: ${theme.typography.bodySmall.fontSize};
+    color: ${theme.colors.text.secondary};
+    overflow: hidden;
+  `,
+  aiLine: css`
+    height: 16px;
+    line-height: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   `,
   errorText: css`
     color: ${theme.colors.error.text};

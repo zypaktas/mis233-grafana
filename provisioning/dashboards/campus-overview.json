@@ -68,13 +68,13 @@
     {
       "id": 1,
       "type": "zeynepsudem-insight-panel",
-      "title": "Insight \u2013 $metric by building",
+      "title": "Insight AI \u2013 $metric by building (forecast + anomalies on the first building)",
       "datasource": {
         "type": "zeynepsudem-campus-datasource",
         "uid": "campus-sensors"
       },
       "gridPos": {
-        "h": 12,
+        "h": 14,
         "w": 15,
         "x": 0,
         "y": 0
@@ -84,7 +84,11 @@
         "lineColor": "purple",
         "lineWidth": 2,
         "showStats": true,
-        "showGrid": true
+        "showGrid": true,
+        "aiEnabled": true,
+        "aiHorizon": 36,
+        "aiSensitivity": 3.5,
+        "aiShowSummary": true
       },
       "targets": [
         {
@@ -97,7 +101,8 @@
           "metric": "$metric",
           "aggregation": "avg",
           "interval": "auto",
-          "format": "timeseries"
+          "format": "timeseries",
+          "includeTruth": true
         }
       ]
     },
@@ -110,7 +115,7 @@
         "uid": "campus-sensors"
       },
       "gridPos": {
-        "h": 12,
+        "h": 14,
         "w": 9,
         "x": 15,
         "y": 0
@@ -221,7 +226,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 14
       },
       "fieldConfig": {
         "defaults": {
@@ -260,7 +265,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 14
       },
       "options": {
         "displayMode": "area",
@@ -268,7 +273,11 @@
         "lineWidth": 2,
         "showStats": true,
         "showGrid": true,
-        "threshold": 250
+        "threshold": 250,
+        "aiEnabled": true,
+        "aiHorizon": 36,
+        "aiSensitivity": 3.5,
+        "aiShowSummary": true
       },
       "targets": [
         {
@@ -281,7 +290,8 @@
           "metric": "occupancy",
           "aggregation": "avg",
           "interval": "auto",
-          "format": "timeseries"
+          "format": "timeseries",
+          "includeTruth": true
         }
       ]
     },
@@ -297,7 +307,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 23
       },
       "timeFrom": "10m",
       "hideTimeOverride": false,
@@ -306,7 +316,10 @@
         "lineColor": "red",
         "lineWidth": 2,
         "showStats": true,
-        "showGrid": true
+        "showGrid": true,
+        "aiEnabled": true,
+        "aiHorizon": 30,
+        "aiShowSummary": true
       },
       "targets": [
         {
@@ -336,14 +349,15 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 33
       },
       "options": {
         "displayMode": "line",
         "lineColor": "green",
         "lineWidth": 2,
         "showStats": true,
-        "showGrid": true
+        "showGrid": true,
+        "aiEnabled": false
       },
       "targets": [
         {

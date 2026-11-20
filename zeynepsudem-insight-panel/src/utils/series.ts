@@ -8,7 +8,11 @@ export interface Point {
 export interface Series {
   name: string;
   points: Point[];
+  /** Optional ground-truth anomaly labels, aligned with `points` (from an `anomaly_truth` field). */
+  truth?: boolean[];
 }
+
+export const TRUTH_FIELD = 'anomaly_truth';
 
 export interface Stats {
   min: number;
@@ -30,22 +34,30 @@ export function framesToSeries(frames: DataFrame[]): Series[] {
     if (!timeField) {
       continue;
     }
+    const truthField = frame.fields.find((f) => f.name === TRUTH_FIELD);
     for (const field of frame.fields) {
-      if (field.type !== FieldType.number) {
+      if (field.type !== FieldType.number || field === truthField) {
         continue;
       }
-      const points: Point[] = [];
+      const rows: Array<{ t: number; v: number; truth: boolean }> = [];
       for (let i = 0; i < frame.length; i++) {
         const t = Number(timeField.values[i]);
         const v = field.values[i];
         if (v === null || v === undefined || !Number.isFinite(v) || !Number.isFinite(t)) {
           continue;
         }
-        points.push({ t, v });
+        rows.push({ t, v, truth: !!truthField && Number(truthField.values[i]) > 0 });
       }
-      points.sort((a, b) => a.t - b.t);
-      if (points.length > 0) {
-        result.push({ name: getFieldDisplayName(field, frame, frames), points });
+      rows.sort((a, b) => a.t - b.t);
+      if (rows.length > 0) {
+        const series: Series = {
+          name: getFieldDisplayName(field, frame, frames),
+          points: rows.map(({ t, v }) => ({ t, v })),
+        };
+        if (truthField) {
+          series.truth = rows.map((r) => r.truth);
+        }
+        result.push(series);
       }
     }
   }
@@ -105,7 +117,7 @@ export function niceTicks(min: number, max: number, count: number): number[] {
   const raw = (max - min) / count;
   const mag = Math.pow(10, Math.floor(Math.log10(raw)));
   const norm = raw / mag;
-  const step = (norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1) * mag;
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
   const ticks: number[] = [];
   for (let v = Math.ceil(min / step) * step; v <= max + step * 1e-9; v += step) {
     ticks.push(Number(v.toFixed(10)));

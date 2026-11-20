@@ -115,7 +115,8 @@ const routes = {
       unit: metric.unit,
       interval_ms: step,
       aggregation: agg,
-      series: buildings.map((b) => ({ building: b.id, name: b.name, points: series(b.id, metric, from, to, step, agg) })),
+      truth: q.get('truth') === '1',
+      series: buildings.map((b) => ({ building: b.id, name: b.name, points: series(b.id, metric, from, to, step, agg, q.get('truth') === '1') })),
     };
   },
 

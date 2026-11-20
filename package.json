@@ -7,6 +7,10 @@
     "build": "npm --prefix zeynepsudem-insight-panel run build && npm --prefix zeynepsudem-campus-datasource run build",
     "test": "npm --prefix zeynepsudem-insight-panel run test:ci && npm --prefix zeynepsudem-campus-datasource run test:ci && npm --prefix mock-api test",
     "start": "docker compose up -d --build",
-    "stop": "docker compose down"
+    "stop": "docker compose down",
+    "e2e": "node e2e/smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
   }
 }
