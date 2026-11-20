@@ -1,5 +1,5 @@
 # MIS 233 final project – Zeynep Sudem
-# One command starts Grafana with both plugins and the mock Campus Sensor API:
+# One command starts Grafana with all three plugins and the mock Campus Sensor API:
 #   docker compose up -d --build      →  http://localhost:3000
 services:
   grafana:
@@ -10,9 +10,10 @@ services:
     volumes:
       - ./zeynepsudem-insight-panel/dist:/var/lib/grafana/plugins/zeynepsudem-insight-panel
       - ./zeynepsudem-campus-datasource/dist:/var/lib/grafana/plugins/zeynepsudem-campus-datasource
+      - ./zeynepsudem-heatmap-panel/dist:/var/lib/grafana/plugins/zeynepsudem-heatmap-panel
       - ./provisioning:/etc/grafana/provisioning
     environment:
-      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: zeynepsudem-insight-panel,zeynepsudem-campus-datasource
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: zeynepsudem-insight-panel,zeynepsudem-campus-datasource,zeynepsudem-heatmap-panel
       GF_AUTH_ANONYMOUS_ENABLED: 'true'
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
       GF_AUTH_DISABLE_LOGIN_FORM: 'false'

@@ -215,6 +215,41 @@
       ]
     },
     {
+      "id": 7,
+      "type": "zeynepsudem-heatmap-panel",
+      "title": "Campus Heatmap \u2013 $metric per building and hour (click a cell to zoom, a name to filter)",
+      "datasource": {
+        "type": "zeynepsudem-campus-datasource",
+        "uid": "campus-sensors"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "options": {
+        "colorScheme": "heat",
+        "buckets": 24,
+        "showValues": true,
+        "variableName": "building"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "zeynepsudem-campus-datasource",
+            "uid": "campus-sensors"
+          },
+          "building": "$building",
+          "metric": "$metric",
+          "aggregation": "avg",
+          "interval": "auto",
+          "format": "timeseries"
+        }
+      ]
+    },
+    {
       "id": 3,
       "type": "timeseries",
       "title": "Energy use \u2013 max per hour (core Grafana panel, same data source)",
@@ -226,7 +261,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 22
       },
       "fieldConfig": {
         "defaults": {
@@ -265,7 +300,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 22
       },
       "options": {
         "displayMode": "area",
@@ -307,7 +342,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 31
       },
       "timeFrom": "10m",
       "hideTimeOverride": false,
@@ -349,7 +384,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 41
       },
       "options": {
         "displayMode": "line",

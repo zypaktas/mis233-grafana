@@ -34,9 +34,18 @@ try {
   const ai = await page.getByTestId('insight-ai-summary').first().textContent();
   check('Insight AI summary is shown', /Forecast:/.test(ai ?? ''), (ai ?? '').slice(0, 80));
 
-  const err = await page.getByText(/Unknown building "does-not-exist"/).count();
-  check('API errors are shown to the user', err > 0);
+  const cells = await page.getByTestId('heatmap-cell').count();
+  check('Campus Heatmap panel draws a building × time grid', cells >= 40, `${cells} cells`);
 
+  // Grafana only renders panels that are on screen, so scroll down first.
+  await page.getByText('Error handling demo').scrollIntoViewIfNeeded();
+  const err = await page
+    .getByText(/Unknown building "does-not-exist"/)
+    .waitFor({ timeout: 10000 })
+    .then(() => true, () => false);
+  check('API errors are shown to the user', err);
+
+  await page.getByText(/LIVE – energy use/).scrollIntoViewIfNeeded();
   const live = page.getByTestId('insight-live');
   await live.first().waitFor({ timeout: 15000 }).catch(() => undefined);
   check('live WebSocket panel is streaming', (await live.count()) > 0);

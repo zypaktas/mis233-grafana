@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "name": "Campus Heatmap (Zeynep Sudem)",
+  "id": "zeynepsudem-heatmap-panel",
+  "info": {
+    "keywords": ["panel", "heatmap", "mis233", "zeynep sudem"],
+    "description": "Building \u00d7 time heatmap with click-to-zoom and click-to-filter. Developed by Zeynep Sudem for MIS 233.",
+    "author": {
+      "name": "Zeynep Sudem"
+    },
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=13.2.0",
+    "plugins": []
+  }
+}
